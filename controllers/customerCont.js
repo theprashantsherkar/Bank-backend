@@ -72,3 +72,28 @@ export const withdrawAPI = async (req, res) => {
     }
 
 }
+
+
+export const getBalanceAPI = async (req, res) => {
+    const userId = req.user.id;
+    if (!userId) {
+        return res.status(401).json({ message: 'User not authenticated' });
+    }
+    const sql = `SELECT balance FROM accounts WHERE user_id = ? ORDER BY transaction_time DESC LIMIT 1`;
+    const values = [userId];
+    try {
+        const [rows] = await db.execute(sql, values);
+        if (rows.length === 0) {
+            return res.status(404).json({ message: 'No transactions found for this user' });
+        }
+        const balance = rows[0].balance;
+        res.status(200).json({
+            message: 'Balance fetched successfully',
+            balance: balance
+        });
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ message: 'Server error during balance fetch' });
+    }
+}
